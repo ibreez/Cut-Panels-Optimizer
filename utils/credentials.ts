@@ -12,6 +12,6 @@ export const credentials = {
   user: {
     password: "userpass456",
     canToggleLogin: false,
-  },
+  };
 }
 
