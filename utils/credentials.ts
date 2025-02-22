@@ -4,7 +4,7 @@ export const credentials = {
     canToggleLogin: true,
   },
 
-  d&w: {
+  dw: {
     password: "free",
     canToggleLogin: false,
   },
@@ -12,6 +12,6 @@ export const credentials = {
   user: {
     password: "userpass456",
     canToggleLogin: false,
-  };
+  },
 }
 
