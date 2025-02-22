@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'CPO V17',
-  description: 'Cut Panel Optimizer,
+  description: 'Cut Panel Optimizer',
   createdBy: 'Breezy',
 }
 
