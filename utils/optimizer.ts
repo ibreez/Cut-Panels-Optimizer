@@ -2,6 +2,7 @@ import type { Panel, StockSheet } from "../types"
 
 export function optimizePanels(stockWidth: number, stockHeight: number, panels: Panel[]): StockSheet[] {
   const sheets: StockSheet[] = []
+  const memo: { [key: string]: StockSheet[] } = {}
 
   // Sort panels by area (largest first) to improve packing efficiency
   const sortedPanels = [...panels].sort((a, b) => b.width * b.height - a.width * a.height)
@@ -15,7 +16,12 @@ export function optimizePanels(stockWidth: number, stockHeight: number, panels: 
       })),
   )
 
-  while (remainingPanels.length > 0) {
+  function optimizeSheet(remainingPanels: Panel[]): StockSheet[] {
+    const memoKey = remainingPanels.map(p => `${p.width}x${p.height}x${p.quantity}`).sort().join(',')
+    if (memo[memoKey]) return memo[memoKey]
+
+    if (remainingPanels.length === 0) return []
+
     const sheet: StockSheet = {
       width: stockWidth,
       height: stockHeight,
@@ -26,16 +32,12 @@ export function optimizePanels(stockWidth: number, stockHeight: number, panels: 
     remainingPanels = []
 
     // Try to place each panel
-    panelsToPlace.forEach((panel) => {
-      // Try both orientations in both positions
+    for (const panel of panelsToPlace) {
       const fits = [
-        // Normal orientation
         { rotated: false, pos: findBestPosition(sheet, panel, false) },
-        // Rotated orientation
         { rotated: true, pos: findBestPosition(sheet, panel, true) },
       ].filter((fit) => fit.pos !== null)
 
-      // Sort fits by y position (prefer top placement)
       fits.sort((a, b) => a.pos!.y - b.pos!.y || a.pos!.x - b.pos!.x)
 
       if (fits.length > 0) {
@@ -47,13 +49,21 @@ export function optimizePanels(stockWidth: number, stockHeight: number, panels: 
           rotated: bestFit.rotated,
         })
       } else {
-        // If panel couldn't be placed, add it to remaining panels
         remainingPanels.push(panel)
       }
-    })
+    }
 
-    sheets.push(sheet)
+    if (remainingPanels.length > 0) {
+      const nextSheets = optimizeSheet(remainingPanels)
+      memo[memoKey] = [sheet, ...nextSheets]
+    } else {
+      memo[memoKey] = [sheet]
+    }
+
+    return memo[memoKey]
   }
+
+  sheets.push(...optimizeSheet(remainingPanels))
 
   return sheets
 }
@@ -62,12 +72,10 @@ function findBestPosition(sheet: StockSheet, panel: Panel, rotated: boolean): { 
   const panelWidth = rotated ? panel.height : panel.width
   const panelHeight = rotated ? panel.width : panel.height
 
-  // If panel doesn't fit in stock sheet at all, return null
   if (panelWidth > sheet.width || panelHeight > sheet.height) {
     return null
   }
 
-  // Find all possible positions
   const positions: { x: number; y: number }[] = []
 
   for (let x = 0; x <= sheet.width - panelWidth; x++) {
@@ -78,7 +86,6 @@ function findBestPosition(sheet: StockSheet, panel: Panel, rotated: boolean): { 
     }
   }
 
-  // Return the position closest to the top-left corner
   return (
     positions.sort((a, b) => {
       if (a.y === b.y) return a.x - b.x

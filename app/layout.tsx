@@ -2,9 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'CPO V17',
+  title: 'CPO V1',
   description: 'Cut Panel Optimizer',
-  createdBy: 'Breezy',
 }
 
 export default function RootLayout({
